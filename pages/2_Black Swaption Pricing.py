@@ -14,7 +14,7 @@ def discount_factors(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"df_{k}"
-            default_val = np.exp(-0.03*k)
+            default_val = round(np.exp(-0.03*k), 2)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)
