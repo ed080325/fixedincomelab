@@ -289,7 +289,7 @@ def zcb_prices(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"df_{k}"
-            default_val = np.exp(-0.03*k)*100
+            default_val = round(np.exp(-0.03*k)*100, 4)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)
@@ -315,7 +315,7 @@ def zcb_from_yields(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"yield_{k}"
-            default_val = 3+0.5*np.log(k+1)
+            default_val = round(3+0.5*np.log(k+1), 4)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)    
@@ -417,7 +417,7 @@ if dual == False:
             sigma = st.number_input("Volatility", min_value=0.0, max_value=1.0, value=vols[model], step=0.01, format="%.4f")
 
 
-if model == "Simple Black-Derman-Toy":
+if model == "Simple Black-Derman-Toy" and not warning:
     col1, col2 = st.columns([1,1], gap="small")
     with col1:
         solve = st.button("🚨 Solve Tree", key="solve")
@@ -462,7 +462,7 @@ if model == "Simple Black-Derman-Toy":
     if plot==True:
         st.plotly_chart(fig)
 
-elif model == "Ho-Lee":
+elif model == "Ho-Lee" and not warning:
     col1, col2 = st.columns([1,1], gap="small")
     with col1:
         solve = st.button("🚨 Solve Tree", key="solve")
@@ -526,57 +526,58 @@ else:
             sigma_hl = st.number_input("Ho-Lee Volatility", min_value=0.0, max_value=1.0, value=vols["Ho-Lee"], step=0.01, format="%.4f")
             sigma_bdt = st.number_input("BDT Volatility", min_value=0.0, max_value=1.0, value=vols["Simple Black-Derman-Toy"], step=0.01, format="%.4f")
     col1, col2 = st.columns([1,1], gap="small")
-    with col1:
-        solve = st.button("🚨 Solve Trees", key="solve")
-        plot=False
-    if solve:
-        hl_model = HoLee(zcbs, sigma_hl)
-        bdt_model = BDT(zcbs, sigma_bdt)
-        if isinstance(hl_model.solved_thetas, ValueError):
-            st.header(f"Calibration failed for Ho-Lee Model - solver could not find a route. Try adjusting {type_} or press Reset")
-        elif isinstance(bdt_model.solved_thetas, ValueError):
-            st.header(f"Calibration failed for BDT Model - solver could not find a route. Try adjusting {type_} or press Reset")
-            with col2:
-                st.markdown(
-                '''
-                <div style="text-align: right;">
-                    <div class="yellow_bubble">🚧 Model Error</div>
-                </div>
-                ''',
-                unsafe_allow_html=True
-            )
-        else:
-            solved_hl_thetas = hl_model.solve_thetas()
-            solved_bdt_thetas = bdt_model.solve_thetas()
-            solved_hl_r_tree = hl_model.build_ho_lee_tree(solved_hl_thetas)
-            solved_bdt_r_tree = bdt_model.build_bdt_tree(solved_bdt_thetas)
-            fig_hl = hl_model.plot_solved_tree(solved_hl_thetas)
-            fig_bdt = bdt_model.plot_solved_tree(solved_bdt_thetas)
-            plot=True
-            with col2:
-                st.markdown(
+    if not warning:
+        with col1:
+            solve = st.button("🚨 Solve Trees", key="solve")
+            plot=False
+        if solve:
+            hl_model = HoLee(zcbs, sigma_hl)
+            bdt_model = BDT(zcbs, sigma_bdt)
+            if isinstance(hl_model.solved_thetas, ValueError):
+                st.header(f"Calibration failed for Ho-Lee Model - solver could not find a route. Try adjusting {type_} or press Reset")
+            elif isinstance(bdt_model.solved_thetas, ValueError):
+                st.header(f"Calibration failed for BDT Model - solver could not find a route. Try adjusting {type_} or press Reset")
+                with col2:
+                    st.markdown(
                     '''
                     <div style="text-align: right;">
-                        <div class="green_bubble">🌳 Trees Solved</div>
+                        <div class="yellow_bubble">🚧 Model Error</div>
                     </div>
                     ''',
                     unsafe_allow_html=True
                 )
-    else:
-        with col2:
-            st.markdown(
-                '''
-                <div style="text-align: right;">
-                    <div class="grey_bubble">⏰ Awaiting Input</div>
-                </div>
-                ''',
-                unsafe_allow_html=True
-            )
-    if plot==True:
-        st.header("Ho-Lee Model:")
-        st.plotly_chart(fig_hl)
-        st.header("Simple Black-Derman-Toy Model:")
-        st.plotly_chart(fig_bdt)
+            else:
+                solved_hl_thetas = hl_model.solve_thetas()
+                solved_bdt_thetas = bdt_model.solve_thetas()
+                solved_hl_r_tree = hl_model.build_ho_lee_tree(solved_hl_thetas)
+                solved_bdt_r_tree = bdt_model.build_bdt_tree(solved_bdt_thetas)
+                fig_hl = hl_model.plot_solved_tree(solved_hl_thetas)
+                fig_bdt = bdt_model.plot_solved_tree(solved_bdt_thetas)
+                plot=True
+                with col2:
+                    st.markdown(
+                        '''
+                        <div style="text-align: right;">
+                            <div class="green_bubble">🌳 Trees Solved</div>
+                        </div>
+                        ''',
+                        unsafe_allow_html=True
+                    )
+        else:
+            with col2:
+                st.markdown(
+                    '''
+                    <div style="text-align: right;">
+                        <div class="grey_bubble">⏰ Awaiting Input</div>
+                    </div>
+                    ''',
+                    unsafe_allow_html=True
+                )
+        if plot==True:
+            st.header("Ho-Lee Model:")
+            st.plotly_chart(fig_hl)
+            st.header("Simple Black-Derman-Toy Model:")
+            st.plotly_chart(fig_bdt)
 
 st.markdown(
     """
