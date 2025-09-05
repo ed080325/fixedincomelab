@@ -329,7 +329,7 @@ def zcb_from_yields(t, T, freq, reset=False):
     return zcbs
 
 
-st.set_page_config(page_title="Binomial Interest Rate Trees", layout="wide")
+st.set_page_config(page_title="Interest Rate Trees", layout="wide")
 
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
