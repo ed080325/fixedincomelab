@@ -506,7 +506,7 @@ elif model == "Ho-Lee" and not warning:
     if plot==True:
         st.plotly_chart(fig)
 
-else:
+elif not warning:
     st.header("Ho Lee Model & Simple Black-Derman-Toy Model")
     with st.container(border=True):
         freq = st.selectbox("Time Step Frequency", ("Annual", "Semi-Annual"))
