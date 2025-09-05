@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import norm
 import streamlit as st
@@ -174,7 +173,6 @@ if not warning:
         pv01_table = pv01_per_date(N, t, T, K, sigma, type_, freq, dfs, V)
         rpv01_table = round(pv01_table, 2)
         pv01_table.set_index("Year", inplace=True) # Set index after creating rounded table so it stays as a column to be plotted
-        #fig = px.line(pv01_table, x=pv01_table.index, y="PV01", markers=True)
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=pv01_table.index, y=pv01_table["PV01"],
