@@ -279,45 +279,6 @@ class BDT:
     
         return fig
 
-def t_zcb_prices(t, T, freq):
-    step = 1 if freq == "Annual" else 0.5
-    times = np.arange(t+step, T + step, step)
-
-    zcbs = {}
-    # chunk times into groups of 3
-    for i in range(0, len(times), 3):
-        cols = st.columns(3)
-        for j, k in enumerate(times[i:i+3]):
-            with cols[j]:
-                zcbs[k] = st.number_input(
-                    f"Year {k:.1f}",
-                    min_value=0.0,
-                    max_value=120.0,
-                    value=np.exp(-0.03*k)*100,
-                    step=0.01,
-                    key=f"zcb_{k}"
-                )
-    return zcbs
-
-def t_zcb_from_yields(t, T, freq, reset=False):
-    step = 1 if freq == "Annual" else 0.5
-    times = np.arange(t+step, T + step, step)
-
-    yields = {}
-    zcbs = {}
-    # chunk times into groups of 3
-    for i in range(0, len(times), 3):
-        cols = st.columns(3)
-        for j, k in enumerate(times[i:i+3]):
-            with cols[j]:
-                yields[k] = st.number_input(
-                    f"Year {k:.1f}", min_value=0.0001, max_value=20.0, value=3+0.5*np.log(k+1), step=0.01, format="%.4f",
-                    key=f"yield_{k}"
-                ) / 100
-    for m, y in yields.items():
-        zcbs[m] = 100 * np.exp(-(y) * m)
-    return zcbs
-
 def zcb_prices(t, T, freq, reset=False):
     step = 1 if freq == "Annual" else 0.5
     times = np.arange(t+step, T + step, step)
