@@ -288,7 +288,7 @@ def zcb_prices(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"df_{k}"
-            default_val = np.exp(-0.03*k)*100
+            default_val = round(np.exp(-0.03*k)*100, 2)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)
@@ -314,7 +314,7 @@ def zcb_from_yields(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"yield_{k}"
-            default_val = 3+0.5*np.log(k+1)
+            default_val = round(3+0.5*np.log(k+1), 2)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)    
