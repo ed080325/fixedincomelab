@@ -3,11 +3,6 @@ from scipy.optimize import newton
 import plotly.graph_objects as go
 import streamlit as st
 
-st.set_page_config(page_title="Bond Analysis", layout="wide")
-st.title("Bond Analysis")
-freq = 1
-warning = False
-
 def bond_price(T, coupon, freq, fv, ytm): # Vectorised for ease of plotting later
     y_arr = np.atleast_1d(ytm)
     if coupon == 0:
@@ -104,7 +99,7 @@ def approx_analysis(T, coupon, freq, fv, y0, n_points=500):
     fig.add_trace(go.Scatter(
         x=yields, y=linear_approx,
         mode='lines',
-        name='Duration (linear) approx',
+        name='Linear Duration approx',
         line=dict(dash='dash', width=6)
     ))
     
@@ -112,7 +107,7 @@ def approx_analysis(T, coupon, freq, fv, y0, n_points=500):
     fig.add_trace(go.Scatter(
         x=yields, y=quadratic_approx,
         mode='lines',
-        name='Duration + Convexity approx',
+        name='Quadratic Convexity approx',
         line=dict(dash='dot', width=6)
     ))
     
@@ -143,12 +138,31 @@ def approx_analysis(T, coupon, freq, fv, y0, n_points=500):
     )
 
     return fig
-    
+
+st.set_page_config(page_title="Bond Analysis", layout="wide")
+
+st.markdown(f"""
+<div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
+    <a href="https://www.linkedin.com/in/e-chamberlain-hall/" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" 
+             width="30" height="30" alt="LinkedIn Logo">
+    </a>
+    <a href="https://www.linkedin.com/in/e-chamberlain-hall/" target="_blank" 
+       style="color:#B390D4; font-size:16px; text-decoration:none;">
+        LinkedIn
+    </a>
+</div>
+""", unsafe_allow_html=True)
+
+st.title("Bond Analysis")
+
+freq = 1
+warning = False
 with st.container(border=True):
     st.subheader("Parameters")
     fv = st.number_input("Face Value", min_value=100, value=100, step=100)
-    T = st.slider("Maturity", min_value=0.5, max_value=10.0, value=5.0, step=0.5)
-    coupon = st.number_input("Coupon (Annualised %)", format="%.3f") / 100
+    T = st.slider("Maturity", min_value=0.5, max_value=30.0, value=5.0, step=0.5)
+    coupon = st.number_input("Coupon (Annualised %)", min_value = 0.0, max_value = 20.0, format="%.3f") / 100
     if coupon != 0:
         type_ = st.selectbox("Coupon Frequency", ("Annual", "Semi-Annual"))
         freq = 2 if type_ == "Semi-Annual" else freq
@@ -162,7 +176,7 @@ with st.container(border=True):
             ytm = st.number_input("Yield to Maturity (Annualised %)", value = 5.0, format="%.3f") / 100
             price = bond_price(T, coupon, freq, fv, ytm)       
         elif solve_for == "Yield to Maturity":
-            price = st.number_input("Price", value = 78.353, format="%.3f")
+            price = st.number_input("Price", min_value = 10.0, value = 78.353, format="%.3f")
             ytm = bond_ytm(price, T, coupon, freq, fv)
 
 if solve_for == "Price":
@@ -207,7 +221,7 @@ if not warning:
                     font-weight:bold;
                     text-align:center;
                     flex:1;">
-                    Macaulay Duration: £{Dmac:,.2f}
+                    Macaulay Duration: {Dmac:,.2f}
                 </div>
                 <div style="
                     background-color:#1b77b6;
@@ -218,7 +232,7 @@ if not warning:
                     font-weight:bold;
                     text-align:center;
                     flex:1;">
-                    Modified Duration: £{Dmod:,.2f}
+                    Modified Duration: {Dmod:,.2f}%
                 </div>
                 <div style="
                     background-color:#1f4488;
@@ -240,10 +254,89 @@ if not warning:
                     font-weight:bold;
                     text-align:center;
                     flex:1;">
-                    Convexity (Annualised): £{convexity_years:,.2f}
+                    Convexity (Annualised): {convexity_years:,.2f}
                 </div>
             </div>
             """, unsafe_allow_html=True)
     st.markdown("\n")
     fig = approx_analysis(T, coupon, freq, fv, ytm, n_points=500)
     st.plotly_chart(fig)
+
+st.markdown(
+    """
+    <style>
+    .big-font {
+        font-size:25px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+with st.expander("💡 Learn more about Bond Analysis"):
+    st.header("Price and Yield To Maturity:")
+    st.markdown("""
+        <div class="big-font">
+        A simple formula links a bond's yield to its price:
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+        P(T)=\sum_{i=1}^{f\times T}\;\frac{c\times FV}{(1+\dfrac{y}{f})^{i}}\quad+\quad\frac{FV}{(1+\dfrac{y}{f})^{f\times T}}\;,\qquad f=\begin{cases}1 & \text{Annual}\\2 & \text{Semi-annual, with halved coupon rate }c\end{cases}
+        """)
+    st.markdown("""
+        <div class="big-font">
+        By definition, a bond's <b>Yield to Maturity</b> is the constant rate that equates the present value of future cashflows to the bond's price. If these cashflows and the YTM are known, discounting the cashflows according to the YTM gives the bond's price. To calculate YTM from price, a common approach is to employ numerical methods as a closed-form solution is not always available, particularly with a larger number of cashflows. In this case, a Newton-Raphson root-finding algorithm is used to converge on the YTM.<br><br>
+        With this pricing formula, it is possible to calculate various measures of price sensitivity to YTM.
+        </div>
+        """, unsafe_allow_html=True)
+    st.header("Macaulay Duration:")
+    st.markdown("""
+        <div class="big-font">
+        <b>Macaulay Duration</b> is defined as the weighted average of payment dates from a bond's cashflows, with weights equal to the disounted value of each cashflow relative to the bond's current price. Measured in years, it provides an estimate of how long it takes to recover the bond's price*.
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+        D_{\text{Mac}}=\sum_{i=1}^{T}\frac{c\times FV\;/\;(1+y)^{T_{i}}}{P(T)}\times T_{i}\quad+\quad\frac{FV\;/\;(1+y)^{T}}{P(T)}\times T
+        """)
+    st.header("Modified Duration:")
+    st.markdown("""
+        <div class="big-font">
+        <b>Modified Duration</b> adjusts <b>Macaulay Duration</b> to directly measure price sensitivity to small changes in yield. It approximates the negative of the percentage change in price for a percentage point change in yield.<br><br>
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+    D_{\text{Mod}}=\frac{D_{\text{Mac}}}{(1+y)}
+    """)
+    st.header("DV01:")
+    st.markdown("""
+        <div class="big-font">
+        <b>DV01</b> measures the negative of the dollar change in bond price for a 1 basis point change in yield. It translates duration into currency terms, making it particularly useful for risk management.<br><br>
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+        \text{DV01}=\frac{D_{\text{Mod}}\times P(T)}{10,000}
+        """)
+    st.header("Convexity:")
+    st.markdown("""
+        <div class="big-font">
+        <b>Convexity</b> measures the curvature in the relationship between bond prices and yields, capturing how duration itself reacts to changes in yield. <b>Convexity</b> is calculated by taking the second derivative of the price formula with respect to yield and can improve price change estimates for larger yield shifts. When dealing with other compounding frequencies, scaling by the square of the frequency converts the units to  <b>years²</b>, allowing comparison between e.g. annual and semi-annual payments.<br><br>
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+        C=\sum_{i=1}^{T}\frac{c\times FV\;/\;(1+y)^{-(T_{i}+2)}}{P(T)}\times T_{i}(T_{i}+1)\quad+\quad\frac{FV\;/\;(1+y)^{-(T+2)}}{P(T)}\times T(T+1)
+        """)
+    st.header("Approximating Price Changes:")
+    st.markdown("""
+        <div class="big-font">
+        The above measures can be used to approximate price changes via a Taylor series expansion of the bond's price around an initial yield. This approximation takes the form:
+        </div>
+        """, unsafe_allow_html=True)
+    st.latex(r"""\Large
+        P(T;\;y)\approx P(T;\;y_{0})\;-\;D_{\text{Mod}}\cdot P(T;\;y_{0})\cdot(y - y_{0})\;+\;\frac{1}{2}C\cdot P(T;\;y_{0})\cdot(y - y_{0})^{2}
+        """)
+    st.markdown("""
+        <div class="big-font">
+        Retaining only the first-order term involving <b>Modified Duration</b> gives a <b>linear approximation</b> of bond price changes which works well for small changes in yield, but quickly loses accuracy further from the expansion point, particularly for longer dated bonds which have greater second-order sensitivities. Including the second-order term involving <b>Convexity</b> adds curvature to the approximation, greatly improving accuracy over larger yield changes by accounting for the bond's non-linear response to interest rates. In practice, the quadratic approximation is usually sufficient as adding higher-order terms provides little additional benefit while increasing computational complexity.
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown("\n")
+    st.write("*Only formulas for annual compounding are included past this point but they can easily be adapted to facilitate other frequencies")
