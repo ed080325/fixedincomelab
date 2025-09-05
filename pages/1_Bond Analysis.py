@@ -67,7 +67,7 @@ def convexity(T, coupon, freq, fv, ytm):
 
 def approx_analysis(T, coupon, freq, fv, y0, n_points=500):
     dy = 0.1
-    y_min = max(y0 - dy, 1e-6)
+    y_min = max(y0 - dy, 1e-6) if y0>=0 else y0 - dy
     y_max = y0 + dy
     yields = np.linspace(y_min, y_max, n_points)
     
@@ -161,7 +161,7 @@ warning = False
 with st.container(border=True):
     st.subheader("Parameters")
     fv = st.number_input("Face Value", min_value=100, value=100, step=100)
-    T = st.slider("Maturity", min_value=0.5, max_value=30.0, value=5.0, step=0.5)
+    T = st.slider("Maturity", min_value=1.0, max_value=30.0, value=5.0, step=0.5)
     coupon = st.number_input("Coupon (Annualised %)", min_value = 0.0, max_value = 20.0, format="%.3f") / 100
     if coupon != 0:
         type_ = st.selectbox("Coupon Frequency", ("Annual", "Semi-Annual"))
@@ -173,10 +173,10 @@ with st.container(border=True):
     if not warning:
         solve_for = st.selectbox("Solve for:", ("Price", "Yield to Maturity"))
         if solve_for == "Price":
-            ytm = st.number_input("Yield to Maturity (Annualised %)", value = 5.0, format="%.3f") / 100
+            ytm = st.number_input("Yield to Maturity (Annualised %)", min_value = -20.0, max_value = 20.0, value = 5.0, format="%.3f") / 100
             price = bond_price(T, coupon, freq, fv, ytm)       
         elif solve_for == "Yield to Maturity":
-            price = st.number_input("Price", min_value = 10.0, value = 78.353, format="%.3f")
+            price = st.number_input("Price", min_value = 1.0, max_value = fv*2.0, value = 78.353, format="%.3f")
             ytm = bond_ytm(price, T, coupon, freq, fv)
 
 if solve_for == "Price":
