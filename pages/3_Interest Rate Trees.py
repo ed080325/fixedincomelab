@@ -2,7 +2,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-from io import BytesIO
 from scipy.optimize import root_scalar
 import streamlit as st
 import pathlib
@@ -289,7 +288,7 @@ def zcb_prices(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"df_{k}"
-            default_val = round(np.exp(-0.03*k)*100, 4)
+            default_val = np.exp(-0.03*k)*100
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)
@@ -315,7 +314,7 @@ def zcb_from_yields(t, T, freq, reset=False):
         cols = st.columns(3)
         for j, k in enumerate(times[i:i+3]):
             key = f"yield_{k}"
-            default_val = round(3+0.5*np.log(k+1), 4)
+            default_val = 3+0.5*np.log(k+1)
             if reset:
                 st.session_state[key] = default_val
             init_val = st.session_state.get(key, default_val)    
@@ -329,7 +328,7 @@ def zcb_from_yields(t, T, freq, reset=False):
     return zcbs
 
 
-st.set_page_config(page_title="Interest Rate Trees", layout="wide")
+st.set_page_config(page_title="Binomial Interest Rate Trees", layout="wide")
 
 st.markdown(f"""
 <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
